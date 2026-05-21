@@ -1,10 +1,7 @@
 ---
 name: dex-aggregator-ai
 display_name: DEX Aggregator AI
-description: >
-  AI-powered DEX aggregator that finds optimal swap routes across 500+ liquidity sources
-  via onchainOS. Features split-route optimization, MEV protection, slippage defense,
-  and gas-aware execution. Delivers best net-output swaps with pre-flight simulation.
+description: AI-powered DEX aggregator that finds optimal swap routes across 500+ liquidity sources via onchainOS. Features split-route optimization, MEV protection, slippage defense, and gas-aware execution. Delivers best net-output swaps with pre-flight simulation.
 version: 1.1.0
 author: "0xCaptain888 fork + adaptation"
 tags:
@@ -16,6 +13,21 @@ tags:
   - slippage
   - cross-chain
   - onchainos
+when_to_use:
+  - "best swap rate for [token] to [token]"
+  - "where should I swap [token]"
+  - "compare dex prices for [amount] [token] to [token]"
+  - "lowest slippage swap [token]"
+  - "split route swap [amount] [token]"
+  - "dex aggregator [token]"
+  - "swap optimization [token]"
+  - "get quote across dexes [token]"
+  - "best price for [token]"
+  - "route my swap [amount] [token] to [token]"
+  - "find cheapest way to buy [token]"
+  - "MEV protected swap [token]"
+  - "simulate swap before executing [token]"
+  - "compare uniswap vs pancakeswap for [token]"
 chains:
   - ethereum
   - solana
