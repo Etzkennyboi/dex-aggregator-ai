@@ -13,28 +13,28 @@
 import { getClient, getChainId } from '../lib/onchainos-client';
 
 export interface TokenSafetyReport {
-  isHoneypot:        boolean;
-  riskScore:         number;
+  isHoneypot: boolean;
+  riskScore: number;
   /** Estimated via round-trip quote spread. 0 if insufficient data. */
-  buyTax:            number;
+  buyTax: number;
   /** Estimated via round-trip quote spread. 0 if insufficient data. */
-  sellTax:           number;
-  canSell:           boolean;
-  contractVerified:  boolean;
-  liquidityLocked:   boolean;
-  warnings:          string[];
+  sellTax: number;
+  canSell: boolean;
+  contractVerified: boolean;
+  liquidityLocked: boolean;
+  warnings: string[];
 }
 
 // Fix #11: correct per-chain USDC addresses
 const USDC_ADDRESSES: Record<string, string> = {
-  '1':     '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+  '1': '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
   '42161': '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
-  '8453':  '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-  '56':    '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d',
-  '137':   '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
-  '10':    '0x7F5c764cBc14f9669B88837ca1490cCa17c31607',
+  '8453': '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+  '56': '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d',
+  '137': '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
+  '10': '0x7F5c764cBc14f9669B88837ca1490cCa17c31607',
   '43114': '0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E',
-  '196':   '0x74b7F16337b8972027F6196A17a631aC6dE26d22', // Fix #11
+  '196': '0x74b7F16337b8972027F6196A17a631aC6dE26d22', // Fix #11
 };
 
 // A 1 USDC probe (6 decimals) for reverse-quote direction
@@ -61,27 +61,28 @@ export class HoneypotDetector {
    */
   static async scanToken(tokenAddress: string, chain: string): Promise<TokenSafetyReport> {
     const report: TokenSafetyReport = {
-      isHoneypot:       false,
-      riskScore:        0,
-      buyTax:           0,
-      sellTax:          0,
-      canSell:          true,
+      isHoneypot: false,
+      riskScore: 0,
+      buyTax: 0,
+      sellTax: 0,
+      canSell: true,
       contractVerified: false,
-      liquidityLocked:  false,
-      warnings:         [],
+      liquidityLocked: false,
+      warnings: [],
     };
 
     try {
-      const client    = getClient();
-      const chainId   = getChainId(chain);
-      const usdcAddr  = USDC_ADDRESSES[chainId] || USDC_ADDRESSES['1'];
+      const client = getClient();
+      const chainId = getChainId(chain);
+      const usdcAddr = USDC_ADDRESSES[chainId] || USDC_ADDRESSES['1'];
 
       // Metadata check
       try {
         const metadata = await client.getTokenMetadata(chainId, tokenAddress);
-        report.contractVerified = typeof metadata === 'object' && metadata !== null && 'isVerified' in metadata
-          ? Boolean(metadata.isVerified)
-          : false;
+        report.contractVerified =
+          typeof metadata === 'object' && metadata !== null && 'isVerified' in metadata
+            ? Boolean(metadata.isVerified)
+            : false;
         if (!report.contractVerified) {
           report.warnings.push('Contract not verified on explorer');
           report.riskScore += 10;
@@ -97,14 +98,14 @@ export class HoneypotDetector {
         const sellQuote = await client.getQuotes({
           chainId,
           fromTokenAddress: tokenAddress,
-          toTokenAddress:   usdcAddr,
-          amount:           PROBE_TOKEN_AMOUNT,
-          slippage:         '5',
+          toTokenAddress: usdcAddr,
+          amount: PROBE_TOKEN_AMOUNT,
+          slippage: '5',
         });
 
         if (!sellQuote || sellQuote.length === 0) {
           report.warnings.push('No sell-side liquidity found — potential honeypot');
-          report.canSell    = false;
+          report.canSell = false;
           report.riskScore += 40;
         } else {
           const best = sellQuote[0];
@@ -115,7 +116,7 @@ export class HoneypotDetector {
           }
         }
       } catch {
-        report.canSell    = false;
+        report.canSell = false;
         report.warnings.push('Sell quote failed — contract may block sells');
         report.riskScore += 35;
       }
@@ -126,9 +127,9 @@ export class HoneypotDetector {
         const buyQuote = await client.getQuotes({
           chainId,
           fromTokenAddress: usdcAddr,
-          toTokenAddress:   tokenAddress,
-          amount:           PROBE_USDC_AMOUNT,
-          slippage:         '5',
+          toTokenAddress: tokenAddress,
+          amount: PROBE_USDC_AMOUNT,
+          slippage: '5',
         });
 
         if (!buyQuote || buyQuote.length === 0) {
@@ -147,14 +148,16 @@ export class HoneypotDetector {
         // Round-trip: sell 1 token → USDC → buy back token
         // Expected back ≈ sellQuoteOut / (1 USDC per buyQuoteOut token)
         // Spread captures pool fees + any hidden sell tax
-        const roundTripRatio = (sellQuoteOut / 1e6) / (1 / (buyQuoteOut / 1e18));
+        const roundTripRatio = sellQuoteOut / 1e6 / (1 / (buyQuoteOut / 1e18));
         const totalSpreadPct = Math.max(0, (1 - roundTripRatio) * 100);
         // Approximate half to each side (rough heuristic)
         report.sellTax = parseFloat((totalSpreadPct / 2).toFixed(2));
-        report.buyTax  = parseFloat((totalSpreadPct / 2).toFixed(2));
+        report.buyTax = parseFloat((totalSpreadPct / 2).toFixed(2));
 
         if (totalSpreadPct > 15) {
-          report.warnings.push(`High round-trip spread: ${totalSpreadPct.toFixed(1)}% — possible tax token`);
+          report.warnings.push(
+            `High round-trip spread: ${totalSpreadPct.toFixed(1)}% — possible tax token`
+          );
           report.riskScore += 15;
         }
       }
@@ -172,11 +175,12 @@ export class HoneypotDetector {
 
   static isSafeToSwap(report: TokenSafetyReport, maxSlippage: number): boolean {
     if (
-      report.isHoneypot   ||
-      !report.canSell      ||
+      report.isHoneypot ||
+      !report.canSell ||
       report.riskScore > 70 ||
       report.buyTax > maxSlippage
-    ) return false;
+    )
+      return false;
     return true;
   }
 }

@@ -10,31 +10,31 @@
 
 import CryptoJS from 'crypto-js';
 
-const OKX_BASE_URL     = 'https://www.okx.com';
-const REQUEST_TIMEOUT  = 15_000; // ms — Fix #16
+const OKX_BASE_URL = 'https://www.okx.com';
+const REQUEST_TIMEOUT = 15_000; // ms — Fix #16
 
 export const CHAIN_IDS: Record<string, string> = {
-  ethereum:  '1',
-  arbitrum:  '42161',
-  base:      '8453',
-  bsc:       '56',
-  polygon:   '137',
-  optimism:  '10',
+  ethereum: '1',
+  arbitrum: '42161',
+  base: '8453',
+  bsc: '56',
+  polygon: '137',
+  optimism: '10',
   avalanche: '43114',
-  solana:    '501',
-  xlayer:    '196',
+  solana: '501',
+  xlayer: '196',
 };
 
 export const NATIVE_ADDRESSES: Record<string, string> = {
-  ethereum:  '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
-  arbitrum:  '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
-  base:      '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
-  bsc:       '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
-  polygon:   '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
-  optimism:  '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+  ethereum: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+  arbitrum: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+  base: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+  bsc: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+  polygon: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+  optimism: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
   avalanche: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
-  solana:    '11111111111111111111111111111111',
-  xlayer:    '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+  solana: '11111111111111111111111111111111',
+  xlayer: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
 };
 
 export function getChainId(chain: string): string {
@@ -42,10 +42,10 @@ export function getChainId(chain: string): string {
 }
 
 interface OKXCredentials {
-  apiKey:     string;
-  secretKey:  string;
+  apiKey: string;
+  secretKey: string;
   passphrase: string;
-  projectId:  string;
+  projectId: string;
 }
 
 class OKXAPIClient {
@@ -61,17 +61,17 @@ class OKXAPIClient {
     queryString = '',
     body = ''
   ): Record<string, string> {
-    const timestamp    = new Date().toISOString();
+    const timestamp = new Date().toISOString();
     const stringToSign = timestamp + method + requestPath + queryString + body;
     return {
-      'Content-Type':         'application/json',
-      'OK-ACCESS-KEY':        this.credentials.apiKey,
-      'OK-ACCESS-SIGN':       CryptoJS.enc.Base64.stringify(
-                                CryptoJS.HmacSHA256(stringToSign, this.credentials.secretKey)
-                              ),
-      'OK-ACCESS-TIMESTAMP':  timestamp,
+      'Content-Type': 'application/json',
+      'OK-ACCESS-KEY': this.credentials.apiKey,
+      'OK-ACCESS-SIGN': CryptoJS.enc.Base64.stringify(
+        CryptoJS.HmacSHA256(stringToSign, this.credentials.secretKey)
+      ),
+      'OK-ACCESS-TIMESTAMP': timestamp,
       'OK-ACCESS-PASSPHRASE': this.credentials.passphrase,
-      'OK-ACCESS-PROJECT':    this.credentials.projectId,
+      'OK-ACCESS-PROJECT': this.credentials.projectId,
     };
   }
 
@@ -82,12 +82,12 @@ class OKXAPIClient {
     body?: Record<string, unknown>
   ): Promise<T> {
     const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
-    const bodyString  = body ? JSON.stringify(body) : '';
-    const headers     = this.getHeaders(method, path, queryString, bodyString);
+    const bodyString = body ? JSON.stringify(body) : '';
+    const headers = this.getHeaders(method, path, queryString, bodyString);
 
     // Fix #16: timeout via AbortController
     const controller = new AbortController();
-    const timer      = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+    const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
 
     const fetchOptions: RequestInit = { method, headers, signal: controller.signal };
     if (bodyString && method === 'POST') fetchOptions.body = bodyString;
@@ -124,21 +124,21 @@ class OKXAPIClient {
   // ── DEX Aggregator ──────────────────────────────────────────────────────
 
   async getQuotes(params: {
-    chainId:          string;
+    chainId: string;
     fromTokenAddress: string;
-    toTokenAddress:   string;
-    amount:           string;
-    slippage:         string;
+    toTokenAddress: string;
+    amount: string;
+    slippage: string;
   }): Promise<unknown[]> {
     return this.request('GET', '/api/v5/dex/aggregator/quote', params);
   }
 
   async getSwapData(params: {
-    chainId:           string;
-    fromTokenAddress:  string;
-    toTokenAddress:    string;
-    amount:            string;
-    slippage:          string;
+    chainId: string;
+    fromTokenAddress: string;
+    toTokenAddress: string;
+    amount: string;
+    slippage: string;
     userWalletAddress: string;
   }): Promise<Record<string, unknown>> {
     return this.request('GET', '/api/v5/dex/aggregator/swap', params);
@@ -155,18 +155,18 @@ class OKXAPIClient {
   // ── Onchain Gateway ─────────────────────────────────────────────────────
 
   async estimateGas(params: {
-    chainId:      string;
-    txData:       string;
+    chainId: string;
+    txData: string;
     fromAddress?: string;
   }): Promise<Record<string, unknown>> {
     return this.request('POST', '/api/v5/onchain/gas-estimate', undefined, params);
   }
 
   async simulateTx(params: {
-    chainId:     string;
-    txData:      string;
+    chainId: string;
+    txData: string;
     fromAddress: string;
-    value?:      string;
+    value?: string;
   }): Promise<Record<string, unknown>> {
     return this.request('POST', '/api/v5/onchain/simulate', undefined, params);
   }
@@ -176,27 +176,21 @@ class OKXAPIClient {
    * onchainOS `callContractSign` endpoint returns { signedTx: string }.
    */
   async signTransaction(params: {
-    chainId:   string;
-    from:      string;
-    to:        string;
-    data:      string;
-    value:     string;
+    chainId: string;
+    from: string;
+    to: string;
+    data: string;
+    value: string;
     gasLimit?: string;
   }): Promise<{ signedTx: string }> {
     return this.request('POST', '/api/v5/onchain/sign-transaction', undefined, params);
   }
 
-  async broadcastTx(params: {
-    chainId:  string;
-    signedTx: string;
-  }): Promise<{ txHash: string }> {
+  async broadcastTx(params: { chainId: string; signedTx: string }): Promise<{ txHash: string }> {
     return this.request('POST', '/api/v5/onchain/broadcast', undefined, params);
   }
 
-  async getTxStatus(params: {
-    chainId: string;
-    txHash:  string;
-  }): Promise<Record<string, unknown>> {
+  async getTxStatus(params: { chainId: string; txHash: string }): Promise<Record<string, unknown>> {
     return this.request('GET', '/api/v5/onchain/tx-status', params);
   }
 
@@ -210,27 +204,32 @@ class OKXAPIClient {
   async getTokenPrice(chainId: string, tokenAddress: string): Promise<string> {
     // Fix #11: use per-chain USDC address for the price lookup denominator
     const USDC_BY_CHAIN: Record<string, string> = {
-      '1':     '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+      '1': '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
       '42161': '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
-      '8453':  '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-      '56':    '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d',
-      '137':   '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
-      '10':    '0x7F5c764cBc14f9669B88837ca1490cCa17c31607',
+      '8453': '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+      '56': '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d',
+      '137': '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
+      '10': '0x7F5c764cBc14f9669B88837ca1490cCa17c31607',
       '43114': '0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E',
-      '196':   '0x74b7F16337b8972027F6196A17a631aC6dE26d22', // Fix #11: real X Layer USDC
+      '196': '0x74b7F16337b8972027F6196A17a631aC6dE26d22', // Fix #11: real X Layer USDC
     };
     const quoteToken = USDC_BY_CHAIN[chainId] || USDC_BY_CHAIN['1'];
 
-    const data = await this.request<Record<string, unknown>[]>('GET', '/api/v5/dex/aggregator/quote', {
-      chainId,
-      fromTokenAddress: tokenAddress,
-      toTokenAddress:   quoteToken,
-      amount:           '1000000000000000000', // 1e18 — caller normalises for non-18 tokens
-      slippage:         '1',
-    });
-    const amount = data[0] && typeof data[0] === 'object' && 'toTokenAmount' in data[0]
-      ? String(data[0].toTokenAmount)
-      : '0';
+    const data = await this.request<Record<string, unknown>[]>(
+      'GET',
+      '/api/v5/dex/aggregator/quote',
+      {
+        chainId,
+        fromTokenAddress: tokenAddress,
+        toTokenAddress: quoteToken,
+        amount: '1000000000000000000', // 1e18 — caller normalises for non-18 tokens
+        slippage: '1',
+      }
+    );
+    const amount =
+      data[0] && typeof data[0] === 'object' && 'toTokenAmount' in data[0]
+        ? String(data[0].toTokenAmount)
+        : '0';
     return amount;
   }
 
@@ -249,10 +248,10 @@ export function initClient(credentials: OKXCredentials): void {
 
 export function getClient(): OKXAPIClient {
   if (!client) {
-    const apiKey     = process.env.OKX_API_KEY     || '';
-    const secretKey  = process.env.OKX_SECRET_KEY  || '';
-    const passphrase = process.env.OKX_PASSPHRASE  || '';
-    const projectId  = process.env.OKX_PROJECT_ID  || '';
+    const apiKey = process.env.OKX_API_KEY || '';
+    const secretKey = process.env.OKX_SECRET_KEY || '';
+    const passphrase = process.env.OKX_PASSPHRASE || '';
+    const projectId = process.env.OKX_PROJECT_ID || '';
 
     if (!apiKey || !secretKey) {
       throw new Error('OKX API credentials not configured. Call initClient() or set env vars.');

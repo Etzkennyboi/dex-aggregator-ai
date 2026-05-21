@@ -3,7 +3,7 @@ name: dex-aggregator-ai
 display_name: DEX Aggregator AI
 description: AI-powered DEX aggregator that finds optimal swap routes across 500+ liquidity sources via onchainOS. Features split-route optimization, MEV protection, slippage defense, and gas-aware execution. Delivers best net-output swaps with pre-flight simulation.
 version: 1.1.0
-author: "0xCaptain888 fork + adaptation"
+author: "YourHandleHere"
 tags:
   - dex
   - aggregator
@@ -28,6 +28,11 @@ when_to_use:
   - "MEV protected swap [token]"
   - "simulate swap before executing [token]"
   - "compare uniswap vs pancakeswap for [token]"
+do_not_trigger:
+  - "user asks about CEX trading"
+  - "user wants off-chain wallet advice"
+  - "question about fiat deposits"
+  - "queries about centralized exchange fees"
 chains:
   - ethereum
   - solana

@@ -59,7 +59,10 @@ export class SplitRouteCalculator {
       }
     }
 
-    const singleRouteNet = Math.max(parseFloat(routeA.netOutputUSD), parseFloat(routeB.netOutputUSD));
+    const singleRouteNet = Math.max(
+      parseFloat(routeA.netOutputUSD),
+      parseFloat(routeB.netOutputUSD)
+    );
     const improvementBps = ((bestNetOutput - singleRouteNet) / Math.max(singleRouteNet, 1)) * 10000;
 
     if (improvementBps < MIN_SPLIT_IMPROVEMENT_BPS) return null;
@@ -67,8 +70,16 @@ export class SplitRouteCalculator {
     const splitA = bestSplit;
     const splitB = 100 - bestSplit;
 
-    const outputA = this.estimateOutput(routeA, (totalInputNum * splitA / 100).toString(), originalAmount);
-    const outputB = this.estimateOutput(routeB, (totalInputNum * splitB / 100).toString(), originalAmount);
+    const outputA = this.estimateOutput(
+      routeA,
+      ((totalInputNum * splitA) / 100).toString(),
+      originalAmount
+    );
+    const outputB = this.estimateOutput(
+      routeB,
+      ((totalInputNum * splitB) / 100).toString(),
+      originalAmount
+    );
 
     return {
       splits: [
@@ -109,7 +120,11 @@ export class SplitRouteCalculator {
     return outputA + outputB - gasA - gasB;
   }
 
-  private static estimateOutput(route: SwapRoute, inputAmount: string, originalAmount: number): number {
+  private static estimateOutput(
+    route: SwapRoute,
+    inputAmount: string,
+    originalAmount: number
+  ): number {
     const baseOutput = parseFloat(route.outputAmount);
     const ratio = parseFloat(inputAmount) / originalAmount;
     const effectiveImpact = route.priceImpact * ratio;

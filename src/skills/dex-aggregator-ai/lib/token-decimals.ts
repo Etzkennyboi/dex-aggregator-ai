@@ -80,14 +80,20 @@ export async function getTokenDecimals(token: string, chainId: string): Promise<
   try {
     const client = getClient();
     const meta = await client.getTokenMetadata(chainId, token);
-    const decimals = typeof meta === 'object' && meta !== null && 'decimals' in meta && typeof meta.decimals === 'number'
-      ? meta.decimals
-      : 18;
+    const decimals =
+      typeof meta === 'object' &&
+      meta !== null &&
+      'decimals' in meta &&
+      typeof meta.decimals === 'number'
+        ? meta.decimals
+        : 18;
     runtimeCache.set(chainKey, decimals);
     return decimals;
   } catch {
     // 4. Safe default
-    console.warn(`[token-decimals] Could not resolve decimals for ${token} on chain ${chainId}, defaulting to 18`);
+    console.warn(
+      `[token-decimals] Could not resolve decimals for ${token} on chain ${chainId}, defaulting to 18`
+    );
     runtimeCache.set(chainKey, 18);
     return 18;
   }

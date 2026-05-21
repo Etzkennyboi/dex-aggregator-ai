@@ -24,19 +24,19 @@ export async function simulateSwap(params: SimulationParams): Promise<Simulation
   if (!route) {
     return {
       simulationStatus: 'REVERT',
-      revertReason:     'Route expired or not found — please re-quote',
+      revertReason: 'Route expired or not found — please re-quote',
       tokenTaxDetected: false,
-      honeypotRisk:     false,
+      honeypotRisk: false,
       approvalRequired: false,
-      estimatedGas:     '0',
-      gasCostUSD:       '0',
-      safeToExecute:    false,
-      warnings:         ['ROUTE_EXPIRED'],
+      estimatedGas: '0',
+      gasCostUSD: '0',
+      safeToExecute: false,
+      warnings: ['ROUTE_EXPIRED'],
     };
   }
 
-  const meta    = getRouteMetadata(routeId);
-  const chain   = meta?.chain   || 'ethereum';
+  const meta = getRouteMetadata(routeId);
+  const chain = meta?.chain || 'ethereum';
   const chainId = meta?.chainId || '1';
 
   // Scan the OUTPUT token (what we're receiving) for honeypot risk
@@ -45,14 +45,14 @@ export async function simulateSwap(params: SimulationParams): Promise<Simulation
   if (safetyReport.isHoneypot) {
     return {
       simulationStatus: 'REVERT',
-      revertReason:     'Honeypot token detected — swap blocked',
+      revertReason: 'Honeypot token detected — swap blocked',
       tokenTaxDetected: safetyReport.buyTax > 0,
-      honeypotRisk:     true,
+      honeypotRisk: true,
       approvalRequired: false,
-      estimatedGas:     '0',
-      gasCostUSD:       '0',
-      safeToExecute:    false,
-      warnings:         ['HONEYPOT_DETECTED', ...safetyReport.warnings],
+      estimatedGas: '0',
+      gasCostUSD: '0',
+      safeToExecute: false,
+      warnings: ['HONEYPOT_DETECTED', ...safetyReport.warnings],
     };
   }
 
@@ -73,13 +73,13 @@ export async function simulateSwap(params: SimulationParams): Promise<Simulation
   let routerAddress: string | undefined;
 
   try {
-    const client   = getClient();
+    const client = getClient();
     const swapData = await client.getSwapData({
       chainId,
-      fromTokenAddress:  meta?.fromTokenAddress || '',
-      toTokenAddress:    meta?.toTokenAddress   || '',
-      amount:            meta?.rawAmount        || '0',
-      slippage:          slippageTolerance.toString(),
+      fromTokenAddress: meta?.fromTokenAddress || '',
+      toTokenAddress: meta?.toTokenAddress || '',
+      amount: meta?.rawAmount || '0',
+      slippage: slippageTolerance.toString(),
       userWalletAddress: fromAddress || '',
     });
 
@@ -89,21 +89,21 @@ export async function simulateSwap(params: SimulationParams): Promise<Simulation
 
       const simResult = await client.simulateTx({
         chainId,
-        txData:      swapData.tx.data,
+        txData: swapData.tx.data,
         fromAddress: fromAddress || '',
-        value:       swapData.tx.value,
+        value: swapData.tx.value,
       });
       onchainSimResult = simResult as SimResult;
 
       // Fix #9: min-output circuit breaker
       if (onchainSimResult?.toTokenAmount && meta?.rawAmount) {
-        const expectedOut   = parseFloat(route.outputAmount);
-        const simulatedOut  = parseFloat(onchainSimResult.toTokenAmount);
+        const expectedOut = parseFloat(route.outputAmount);
+        const simulatedOut = parseFloat(onchainSimResult.toTokenAmount);
         const minAcceptable = expectedOut * (1 - slippageTolerance / 100);
         if (simulatedOut < minAcceptable) {
           warnings.push(
             `Output below min threshold: simulated ${simulatedOut.toFixed(6)} < ` +
-            `minimum acceptable ${minAcceptable.toFixed(6)} (${slippageTolerance}% slippage)`
+              `minimum acceptable ${minAcceptable.toFixed(6)} (${slippageTolerance}% slippage)`
           );
           onchainSimResult.status = 'REVERT';
           onchainSimResult.revertReason = 'MIN_OUTPUT_NOT_MET';
@@ -116,19 +116,16 @@ export async function simulateSwap(params: SimulationParams): Promise<Simulation
     );
   }
 
-  const estimatedGas    = onchainSimResult?.gasEstimate || route.gasEstimate;
+  const estimatedGas = onchainSimResult?.gasEstimate || route.gasEstimate;
   const onchainReverted = onchainSimResult?.status === 'REVERT';
 
   if (onchainReverted) {
-    warnings.push(
-      `Onchain simulation reverted: ${onchainSimResult?.revertReason || 'Unknown'}`
-    );
+    warnings.push(`Onchain simulation reverted: ${onchainSimResult?.revertReason || 'Unknown'}`);
   }
 
   // Approvals: needed for all ERC-20 input tokens (not native ETH/BNB/etc.)
   const isNativeInput =
-    (meta?.fromTokenAddress || '').toLowerCase() ===
-    '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
+    (meta?.fromTokenAddress || '').toLowerCase() === '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
   const approvalRequired = !isNativeInput;
 
   const safeToExecute =
@@ -143,16 +140,16 @@ export async function simulateSwap(params: SimulationParams): Promise<Simulation
 
   return {
     simulationStatus: onchainReverted ? 'REVERT' : safeToExecute ? 'SUCCESS' : 'WARNING',
-    revertReason:     onchainReverted ? onchainSimResult?.revertReason : undefined,
+    revertReason: onchainReverted ? onchainSimResult?.revertReason : undefined,
     tokenTaxDetected: safetyReport.buyTax > 0,
-    honeypotRisk:     safetyReport.riskScore > 50,
+    honeypotRisk: safetyReport.riskScore > 50,
     approvalRequired,
     // Fix #6: FROM token address (what the router needs allowance for)
-    approvalToken:    approvalRequired ? (meta?.fromTokenAddress ?? route.fromToken) : undefined,
+    approvalToken: approvalRequired ? (meta?.fromTokenAddress ?? route.fromToken) : undefined,
     // Fix #7: router contract address, not DEX name string
-    approvalSpender:  approvalRequired ? routerAddress : undefined,
+    approvalSpender: approvalRequired ? routerAddress : undefined,
     estimatedGas,
-    gasCostUSD:       route.gasCostUSD,
+    gasCostUSD: route.gasCostUSD,
     safeToExecute,
     warnings,
   };

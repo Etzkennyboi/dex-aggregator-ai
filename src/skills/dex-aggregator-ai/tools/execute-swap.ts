@@ -47,8 +47,8 @@ export async function executeSwap(params: ExecutionParams): Promise<SwapExecutio
     // approvalSpender (router address). See simulate-swap.ts for how these are set.
     if (sim.approvalRequired && sim.approvalToken && sim.approvalSpender) {
       await handleApproval(
-        sim.approvalToken,     // input token contract address
-        sim.approvalSpender,   // router contract address (e.g. swapData.tx.to)
+        sim.approvalToken, // input token contract address
+        sim.approvalSpender, // router contract address (e.g. swapData.tx.to)
         fromAddress,
         meta.chainId
       );
@@ -59,11 +59,11 @@ export async function executeSwap(params: ExecutionParams): Promise<SwapExecutio
 
   // Fix #3: single getSwapData call, post-simulation
   const swapData = await client.getSwapData({
-    chainId:           meta.chainId,
-    fromTokenAddress:  meta.fromTokenAddress,
-    toTokenAddress:    meta.toTokenAddress,
-    amount:            meta.rawAmount,
-    slippage:          slippageTolerance.toString(),
+    chainId: meta.chainId,
+    fromTokenAddress: meta.fromTokenAddress,
+    toTokenAddress: meta.toTokenAddress,
+    amount: meta.rawAmount,
+    slippage: slippageTolerance.toString(),
     userWalletAddress: fromAddress,
   });
 
@@ -71,10 +71,10 @@ export async function executeSwap(params: ExecutionParams): Promise<SwapExecutio
 
   // Final on-chain simulation before broadcast
   const simResult = await client.simulateTx({
-    chainId:     meta.chainId,
-    txData:      swapData.tx.data,
+    chainId: meta.chainId,
+    txData: swapData.tx.data,
     fromAddress,
-    value:       swapData.tx.value,
+    value: swapData.tx.value,
   });
 
   if (simResult?.status === 'REVERT') {
@@ -83,35 +83,38 @@ export async function executeSwap(params: ExecutionParams): Promise<SwapExecutio
 
   // Gas estimate
   const gasEstimate = await client.estimateGas({
-    chainId:     meta.chainId,
-    txData:      swapData.tx.data,
+    chainId: meta.chainId,
+    txData: swapData.tx.data,
     fromAddress,
   });
 
   // Sign and broadcast
-  const txHash = await signAndBroadcast({
-    chainId:  meta.chainId,
-    to:       swapData.tx.to,
-    data:     swapData.tx.data,
-    value:    swapData.tx.value || '0',
-    gasLimit: gasEstimate?.gasLimit || swapData.tx.gasLimit || route.gasEstimate,
-    from:     fromAddress,
-  }, client);
+  const txHash = await signAndBroadcast(
+    {
+      chainId: meta.chainId,
+      to: swapData.tx.to,
+      data: swapData.tx.data,
+      value: swapData.tx.value || '0',
+      gasLimit: gasEstimate?.gasLimit || swapData.tx.gasLimit || route.gasEstimate,
+      from: fromAddress,
+    },
+    client
+  );
 
   return {
     txHash,
-    status:          'PENDING',
-    fromToken:       meta.fromToken,
-    toToken:         meta.toToken,
-    inputAmount:     meta.amount,
-    outputAmount:    route.outputAmount,
-    gasUsed:         gasEstimate?.gasLimit || route.gasEstimate,
-    gasCostUSD:      route.gasCostUSD,
-    effectivePrice:  (parseFloat(route.outputAmount) / parseFloat(meta.amount)).toString(),
-    priceImpact:     route.priceImpact,
-    explorerUrl:     getExplorerUrl(txHash, meta.chain),
-    mevProtected:    route.mevProtected,
-    timestamp:       new Date().toISOString(),
+    status: 'PENDING',
+    fromToken: meta.fromToken,
+    toToken: meta.toToken,
+    inputAmount: meta.amount,
+    outputAmount: route.outputAmount,
+    gasUsed: gasEstimate?.gasLimit || route.gasEstimate,
+    gasCostUSD: route.gasCostUSD,
+    effectivePrice: (parseFloat(route.outputAmount) / parseFloat(meta.amount)).toString(),
+    priceImpact: route.priceImpact,
+    explorerUrl: getExplorerUrl(txHash, meta.chain),
+    mevProtected: route.mevProtected,
+    timestamp: new Date().toISOString(),
   };
 }
 
@@ -135,11 +138,11 @@ async function handleApproval(
   const client = getClient();
 
   const USDT_ADDRESSES: Record<string, string> = {
-    '1':     '0xdAC17F958D2ee523a2206206994597C13D831ec7',
+    '1': '0xdAC17F958D2ee523a2206206994597C13D831ec7',
     '42161': '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
-    '56':    '0x55d398326f99059fF775485246999027B3197955',
-    '137':   '0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
-    '196':   '0x1E4a5963aBFD975d8c9021ce480b42188849D41d',
+    '56': '0x55d398326f99059fF775485246999027B3197955',
+    '137': '0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
+    '196': '0x1E4a5963aBFD975d8c9021ce480b42188849D41d',
   };
 
   const isUSDT = USDT_ADDRESSES[chainId]?.toLowerCase() === tokenAddress.toLowerCase();
@@ -154,7 +157,8 @@ async function handleApproval(
     console.log(`[execute-swap] USDT allowance reset to 0 for spender ${spender}`);
   }
 
-  const MAX_UINT256 = '115792089237316195423570985008687907853269984665640564039457584007913129639935';
+  const MAX_UINT256 =
+    '115792089237316195423570985008687907853269984665640564039457584007913129639935';
   const approveData = buildApproveCalldata(spender, MAX_UINT256);
 
   await signAndBroadcast(
@@ -189,22 +193,22 @@ function buildApproveCalldata(spender: string, amount: string): string {
  */
 async function signAndBroadcast(
   tx: {
-    chainId:  string;
-    to:       string;
-    data:     string;
-    value:    string;
-    from:     string;
+    chainId: string;
+    to: string;
+    data: string;
+    value: string;
+    from: string;
     gasLimit?: string;
   },
   client: ReturnType<typeof getClient>
 ): Promise<string> {
   // TEE signing via onchainOS gateway
   const signed = await client.signTransaction({
-    chainId:  tx.chainId,
-    from:     tx.from,
-    to:       tx.to,
-    data:     tx.data,
-    value:    tx.value,
+    chainId: tx.chainId,
+    from: tx.from,
+    to: tx.to,
+    data: tx.data,
+    value: tx.value,
     gasLimit: tx.gasLimit,
   });
 
@@ -213,7 +217,7 @@ async function signAndBroadcast(
   }
 
   const broadcast = await client.broadcastTx({
-    chainId:  tx.chainId,
+    chainId: tx.chainId,
     signedTx: signed.signedTx,
   });
 
@@ -226,14 +230,14 @@ async function signAndBroadcast(
 
 function getExplorerUrl(txHash: string, chain: string): string {
   const explorers: Record<string, string> = {
-    ethereum:  'https://etherscan.io/tx/',
-    arbitrum:  'https://arbiscan.io/tx/',
-    base:      'https://basescan.org/tx/',
-    bsc:       'https://bscscan.com/tx/',
-    polygon:   'https://polygonscan.com/tx/',
-    solana:    'https://solscan.io/tx/',
-    optimism:  'https://optimistic.etherscan.io/tx/',
-    xlayer:    'https://www.oklink.com/xlayer/tx/',
+    ethereum: 'https://etherscan.io/tx/',
+    arbitrum: 'https://arbiscan.io/tx/',
+    base: 'https://basescan.org/tx/',
+    bsc: 'https://bscscan.com/tx/',
+    polygon: 'https://polygonscan.com/tx/',
+    solana: 'https://solscan.io/tx/',
+    optimism: 'https://optimistic.etherscan.io/tx/',
+    xlayer: 'https://www.oklink.com/xlayer/tx/',
     avalanche: 'https://snowtrace.io/tx/',
   };
   return (explorers[chain.toLowerCase()] || explorers.ethereum) + txHash;

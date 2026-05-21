@@ -31,9 +31,7 @@ export class NetOutputOptimizer {
     const outputValue = parseFloat(route.outputAmount) * this.getTokenPriceSync(route.outputToken);
     const gasCost = parseFloat(route.gasCostUSD);
     const slippageCost = outputValue * ((route.priceImpact * this.SLIPPAGE_BUFFER) / 100);
-    const mevRiskCost = route.mevProtected
-      ? 0
-      : outputValue * (this.MEV_RISK_COST_BPS / 10000);
+    const mevRiskCost = route.mevProtected ? 0 : outputValue * (this.MEV_RISK_COST_BPS / 10000);
     const netOutput = outputValue - gasCost - slippageCost - mevRiskCost;
 
     return { outputValue, gasCost, slippageCost, mevRiskCost, netOutput };
