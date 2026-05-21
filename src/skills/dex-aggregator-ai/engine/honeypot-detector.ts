@@ -11,6 +11,7 @@
  */
 
 import { getClient, getChainId } from '../lib/onchainos-client';
+import { getTokenDecimals } from '../lib/token-decimals';
 
 export interface TokenSafetyReport {
   isHoneypot: boolean;
@@ -39,9 +40,6 @@ const USDC_ADDRESSES: Record<string, string> = {
 
 // A 1 USDC probe (6 decimals) for reverse-quote direction
 const PROBE_USDC_AMOUNT = '1000000'; // 1 USDC
-
-// 1 token at 18 decimals for forward-quote direction
-const PROBE_TOKEN_AMOUNT = '1000000000000000000';
 
 export class HoneypotDetector {
   /**
@@ -95,11 +93,14 @@ export class HoneypotDetector {
       // Forward quote: token → USDC (sell path)
       let sellQuoteOut: number | null = null;
       try {
+        const decimals = await getTokenDecimals(tokenAddress, chainId);
+        const probeTokenAmount = (10n ** BigInt(decimals)).toString();
+
         const sellQuote = await client.getQuotes({
           chainId,
           fromTokenAddress: tokenAddress,
           toTokenAddress: usdcAddr,
-          amount: PROBE_TOKEN_AMOUNT,
+          amount: probeTokenAmount,
           slippage: '5',
         });
 
