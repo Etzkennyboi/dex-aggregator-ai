@@ -122,7 +122,7 @@ export async function getOptimalSwapQuote(params: SwapQuoteParams): Promise<Swap
         gasEstimate: quoteGasEstimate,
         gasCostUSD: gasCostUSD.toString(),
         netOutputUSD: (parseFloat(quoteAmount) * tokenPrice - gasCostUSD).toString(),
-        routeType: quoteRouterType,
+        routeType: quoteRouterType as "SINGLE" | "SPLIT" | "BRIDGE",
         estimatedTime: quoteEstimatedTime,
         mevProtected: false,
       };

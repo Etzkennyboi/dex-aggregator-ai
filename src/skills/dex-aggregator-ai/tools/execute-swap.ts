@@ -67,15 +67,17 @@ export async function executeSwap(params: ExecutionParams): Promise<SwapExecutio
     userWalletAddress: fromAddress,
   });
 
-  if (!swapData?.tx) throw new Error('Failed to build swap transaction');
+  const sData = swapData as any;
+
+  if (!sData?.tx) throw new Error('Failed to build swap transaction');
 
   // Final on-chain simulation before broadcast
   const simResult = await client.simulateTx({
     chainId: meta.chainId,
-    txData: swapData.tx.data,
+    txData: sData.tx.data,
     fromAddress,
-    value: swapData.tx.value,
-  });
+    value: sData.tx.value,
+  }) as any;
 
   if (simResult?.status === 'REVERT') {
     throw new Error(`Final simulation failed: ${simResult.revertReason || 'Unknown revert'}`);
@@ -84,22 +86,22 @@ export async function executeSwap(params: ExecutionParams): Promise<SwapExecutio
   // Gas estimate
   const gasEstimate = await client.estimateGas({
     chainId: meta.chainId,
-    txData: swapData.tx.data,
+    txData: sData.tx.data,
     fromAddress,
-  });
+  }) as any;
 
   // Sign and broadcast
   const txHash = await signAndBroadcast(
     {
       chainId: meta.chainId,
-      to: swapData.tx.to,
-      data: swapData.tx.data,
-      value: swapData.tx.value || '0',
-      gasLimit: gasEstimate?.gasLimit || swapData.tx.gasLimit || route.gasEstimate,
+      to: sData.tx.to,
+      data: sData.tx.data,
+      value: sData.tx.value || '0',
+      gasLimit: gasEstimate?.gasLimit || sData.tx.gasLimit || route.gasEstimate,
       from: fromAddress,
     },
     client
-  );
+  ) as string;
 
   return {
     txHash,

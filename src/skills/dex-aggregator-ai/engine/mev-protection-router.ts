@@ -58,17 +58,19 @@ export class MEVProtectionRouter {
       const txStatus = await client.getTxStatus({ chainId, txHash });
 
       if (!txStatus) return false;
+      
+      const status = txStatus as any;
 
-      if (txStatus.effectiveOutput && txStatus.quotedOutput) {
+      if (status.effectiveOutput && status.quotedOutput) {
         const slippage =
-          (parseFloat(txStatus.quotedOutput) - parseFloat(txStatus.effectiveOutput)) /
-          parseFloat(txStatus.quotedOutput);
+          (parseFloat(status.quotedOutput as string) - parseFloat(status.effectiveOutput as string)) /
+          parseFloat(status.quotedOutput as string);
         if (slippage > 0.02) return true;
       }
 
-      if (txStatus.blockNumber) {
-        const priceImpact = parseFloat(txStatus.priceImpact || '0');
-        if (priceImpact > parseFloat(txStatus.quotedPriceImpact || '0') * 2) return true;
+      if (status.blockNumber) {
+        const priceImpact = parseFloat((status.priceImpact as string) || '0');
+        if (priceImpact > parseFloat((status.quotedPriceImpact as string) || '0') * 2) return true;
       }
 
       return false;

@@ -109,7 +109,7 @@ export class HoneypotDetector {
           report.canSell = false;
           report.riskScore += 40;
         } else {
-          const best = sellQuote[0];
+          const best = sellQuote[0] as any;
           sellQuoteOut = parseFloat(best.toTokenAmount);
           if (parseFloat(best.priceImpact) > 10) {
             report.warnings.push('Extreme sell-side price impact (>10%)');
@@ -137,7 +137,7 @@ export class HoneypotDetector {
           report.warnings.push('No buy-side liquidity found');
           report.riskScore += 20;
         } else {
-          buyQuoteOut = parseFloat(buyQuote[0].toTokenAmount);
+          buyQuoteOut = parseFloat((buyQuote[0] as any).toTokenAmount);
         }
       } catch {
         report.warnings.push('Buy quote failed');

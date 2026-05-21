@@ -74,7 +74,7 @@ export async function compareDexQuotes(params: CompareParams): Promise<CompareRe
   await NetOutputOptimizer.warmCache([toToken]);
 
   const routes: SwapRoute[] = await Promise.all(
-    quotes.map(async (q) => {
+    quotes.map(async (q: any) => {
       const gasCostUSD = calculateGasCost(q.gasEstimate || '150000', gasPrice);
       const timeSeconds = parseTimeString(q.estimatedTime || '< 30s');
       const tokenPrice = await NetOutputOptimizer.getTokenPrice(toToken);
@@ -166,9 +166,9 @@ async function fetchLiveGasPrice(
   client: ReturnType<typeof getClient>
 ): Promise<{ gwei: number; nativeUSD: number }> {
   try {
-    const gasData = await client.estimateGas({ chainId, txData: '0x' });
+    const gasData = await client.estimateGas({ chainId, txData: '0x' }) as any;
     const gwei = gasData?.gasPrice
-      ? parseInt(gasData.gasPrice) / 1e9
+      ? parseInt(gasData.gasPrice as string) / 1e9
       : (FALLBACK_GAS_GWEI[chain] ?? 20);
     const nativeUSD = NATIVE_TOKEN_USD[chain.toLowerCase()] ?? 3000;
     return { gwei, nativeUSD };

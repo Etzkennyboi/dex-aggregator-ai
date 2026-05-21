@@ -24,14 +24,14 @@ export async function trackSwapOrder(params: TrackParams): Promise<TrackResult> 
         status: 'FAILED',
         confirmations: 0,
         mevAttacked: false,
-        error: status.error || 'Transaction failed',
+        error: (status as any).error || 'Transaction failed',
       };
     }
 
     if (status.status === 'PENDING') {
       return {
         status: 'PENDING',
-        confirmations: status.confirmations || 0,
+        confirmations: (status as any).confirmations || 0,
         mevAttacked: false,
       };
     }
@@ -40,12 +40,12 @@ export async function trackSwapOrder(params: TrackParams): Promise<TrackResult> 
 
     return {
       status: 'CONFIRMED',
-      confirmations: status.confirmations || 1,
-      blockNumber: status.blockNumber,
-      effectiveOutput: status.toTokenAmount,
-      refundAmount: status.positiveSlippageRefund,
+      confirmations: (status as any).confirmations || 1,
+      blockNumber: (status as any).blockNumber as number,
+      effectiveOutput: (status as any).toTokenAmount as string,
+      refundAmount: (status as any).positiveSlippageRefund as string,
       mevAttacked,
-      settlementTime: status.confirmTime,
+      settlementTime: (status as any).confirmTime as string,
     };
   } catch (error) {
     return {

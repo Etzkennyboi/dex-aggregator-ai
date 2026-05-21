@@ -83,15 +83,16 @@ export async function simulateSwap(params: SimulationParams): Promise<Simulation
       userWalletAddress: fromAddress || '',
     });
 
-    if (swapData?.tx?.data) {
+    const sData = swapData as any;
+    if (sData?.tx?.data) {
       // Fix #7: capture the actual router address for the caller
-      routerAddress = swapData.tx.to;
+      routerAddress = sData.tx.to;
 
       const simResult = await client.simulateTx({
         chainId,
-        txData: swapData.tx.data,
+        txData: sData.tx.data,
         fromAddress: fromAddress || '',
-        value: swapData.tx.value,
+        value: sData.tx.value,
       });
       onchainSimResult = simResult as SimResult;
 
