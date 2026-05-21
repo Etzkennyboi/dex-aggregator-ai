@@ -1,81 +1,77 @@
-# DEX Aggregator AI -- OKX Agentic Wallet Skill
+# DEX Aggregator AI
 
-> AI-powered DEX aggregator that finds optimal swap routes across 500+ liquidity sources via onchainOS. Features split-route optimization, MEV protection, slippage defense, and gas-aware execution.
+A working OKX onchainOS skill package with a production-ready ebuild-style build and test workflow.
 
-## Competition Submission
+This repository contains a complete agentic wallet skill implementation for optimal DEX swap routing, including:
+- onchainOS-powered quote aggregation across many sources
+- gas-aware net output ranking and split-route optimization
+- MEV protection and pre-flight safety simulation
+- a small build and packaging workflow for submission
 
-**Prize**: Agentic Wallet Competition -- 5,000 USDC Prize Pool  
-**Hard Requirement**: Uses onchainOS as primary data source and trading tool  
-**Originality**: 4 new engines not in any existing plugin
+## What this repo contains
 
-## What's Different (Why This Wins)
+- `SKILL.md` — skill definition metadata, triggers, workflows, and example prompts
+- `package.json` — scripts for install, build, test, and lint
+- `tsconfig.json` — strict TypeScript build settings
+- `.env.example` — credential template for OKX API keys
+- `scripts/demo.ts` — demo runner for live skill validation
+- `src/skills/dex-aggregator-ai/` — implementation files for the skill
+- `tests/` — unit tests covering split routing, approvals, token decimals, and route storage
 
-| Feature | Existing Plugins | This Skill |
-|---------|-----------------|------------|
-| **Single DEX** | Uniswap, PancakeSwap, Raydium (individual) | **500+ DEX aggregation** via onchainOS |
-| **Headline Price** | All existing plugins | **Net output** (price - gas - slippage - MEV) |
-| **Split Routes** | None | **Binary-search optimized** split routing |
-| **MEV Protection** | None | **Chain-aware** private mempool routing |
-| **Pre-flight Safety** | None | **Honeypot + tax + revert** simulation |
-| **USDT Bug** | Most plugins fail | **Reset-to-zero** approval handling |
+## Build & Package
 
-## Quick Start
+This repo is structured like an ebuild-ready package with a clean build lifecycle.
 
 ```bash
-# 1. Clone and install
 npm install
-
-# 2. Configure credentials
-cp .env.example .env
-# Edit .env with your OKX API key, secret, passphrase, project ID
-
-# 3. Run demo
-npm run dev
-
-# 4. Build for submission
 npm run build
+npm test -- --runInBand
 ```
 
-## File Structure
+## Usage
 
-```
-dex-aggregator-ai/
-├── SKILL.md                          # Skill definition (submit this)
-├── package.json                      # Dependencies & scripts
-├── tsconfig.json                     # TypeScript config
-├── .env.example                      # API credentials template
-├── .gitignore
-├── scripts/
-│   └── demo.ts                       # Live demo script
-├── src/skills/dex-aggregator-ai/
-│   ├── index.ts                      # Skill entry point
-│   ├── types.ts                      # Type definitions
-│   ├── lib/
-│   │   └── onchainos-client.ts       # Real OKX API client (HMAC-SHA256)
-│   ├── engine/
-│   │   ├── split-route-calculator.ts # Binary-search split optimization
-│   │   ├── net-output-optimizer.ts   # True net output after all costs
-│   │   ├── mev-protection-router.ts    # Chain-aware MEV protection
-│   │   └── honeypot-detector.ts       # Token safety scanning
-│   └── tools/
-│       ├── get-optimal-swap-quote.ts # Main quote engine
-│       ├── simulate-swap.ts          # Pre-flight simulation
-│       ├── execute-swap.ts           # Swap execution
-│       ├── compare-dex-quotes.ts     # Side-by-side comparison
-│       └── track-swap-order.ts       # Post-execution tracking
+1. Copy credentials from `.env.example`:
+
+```bash
+cp .env.example .env
 ```
 
-## Judging Criteria Scorecard
+2. Set `OKX_API_KEY`, `OKX_SECRET_KEY`, `OKX_PASSPHRASE`, and `OKX_PROJECT_ID` in `.env`.
 
-| Criteria | Points | Evidence |
-|----------|--------|----------|
-| **Structure & Metadata** (25) | 25/25 | Clean YAML, 280-line SKILL.md, proper tags/chains |
-| **Trigger Quality** (25) | 25/25 | 14 specific phrases, zero misfire risk |
-| **Instruction Quality** (30) | 30/30 | Tool schemas, 3 workflows, 3 examples, error table |
-| **Efficiency & Performance** (20) | 20/20 | Binary search split, token cache, error fallbacks |
-| **Executability** (Human 50%) | 50/50 | Real API calls, demo script, tx broadcast + tracking |
-| **Result Quality** (Human) | 50/50 | Net-output optimization, MEV protection, split routes |
-| **Originality** (Human) | 50/50 | 4 NEW engines: SplitRoute, NetOutput, MEVRouter, Honeypot |
+3. Run the demo script:
+
+```bash
+npm run dev
+```
+
+## Core implementation
+
+- `src/skills/dex-aggregator-ai/index.ts`
+  - skill export surface and orchestration entrypoint
+- `src/skills/dex-aggregator-ai/lib/onchainos-client.ts`
+  - HMAC request signing and onchainOS API access
+- `src/skills/dex-aggregator-ai/engine/split-route-calculator.ts`
+  - split route optimization with practical net output modeling
+- `src/skills/dex-aggregator-ai/engine/net-output-optimizer.ts`
+  - rank routes by true post-cost output
+- `src/skills/dex-aggregator-ai/engine/mev-protection-router.ts`
+  - MEV-aware routing adjustments
+- `src/skills/dex-aggregator-ai/engine/honeypot-detector.ts`
+  - token safety screening and scam avoidance
+- `src/skills/dex-aggregator-ai/tools/get-optimal-swap-quote.ts`
+  - main quote engine, route enrichment, and split-route decisioning
+
+## Testing
+
+Run the unit test suite to verify build quality and behavior:
+
+```bash
+npm test -- --runInBand
+```
+
+## Git & Deployment
+
+This repo is already configured for GitHub deployment and can be pushed directly to a remote.
 
 ## License
 
